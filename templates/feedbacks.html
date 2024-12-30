@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список відгуків</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Всі відгуки</h1>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Ім'я</th>
+                    <th>Email</th>
+                    <th>Оцінка</th>
+                    <th>Повідомлення</th>
+                    <th>Дата створення</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feedback in feedbacks %}
+                <tr>
+                    <td>{{ feedback.name }}</td>
+                    <td>{{ feedback.email }}</td>
+                    <td>{{ feedback.mark }}</td>
+                    <td>{{ feedback.message }}</td>
+                    <td>{{ feedback.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Повернутися на головну</a>
+    </div>
+</body>
+</html>
+

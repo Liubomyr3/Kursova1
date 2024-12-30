@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чорнобильський тур</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    #map {
+      height: 400px;
+      width: 100%;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Навігаційна панель -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('index') }}">Головна</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#excursions">Екскурсії</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#about">Про нас</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#contact">Залишити відгук</a></li>
+        </ul>
+        <ul class="navbar-nav">
+          {% if 'user_id' in session %}
+            <li class="nav-item"><a class="nav2-link" href="{{ url_for('dashboard') }}">{{ session['user_name'] }}</a></li>
+            <li class="nav-item"><a class="nav1-link btn btn-danger text-white" href="{{ url_for('logout') }}">Вийти</a></li>
+          {% else %}
+            <li class="nav-item"><a class="nav1-link" href="{{ url_for('login') }}">Вхід</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Основний контент -->
+  <div class="container mt-5 pt-5">
+    <h1 class="text-center mb-4">Чорнобильський тур</h1>
+    <img src="/static/images/Chornobil.jpg" class="img-fluid rounded mx-auto d-block mb-4" alt="Чорнобиль">
+    <p class="text-center lead">Пориньте в історію зони відчуження та дізнайтеся більше про наслідки катастрофи!</p>
+    <div class="row">
+      <div class="col-md-6">
+        <h4>Маршрут:</h4>
+        <ul>
+          <li>Відвідування міста Прип'ять.</li>
+          <li>Екскурсія до Чорнобильської АЕС.</li>
+          <li>Зустріч із місцевими жителями (самоселами).</li>
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <h4>Що включено:</h4>
+        <ul>
+          <li>Гід.</li>
+          <li>Транспорт.</li>
+          <li>Обід у зоні відчуження.</li>
+        </ul>
+        <h4>Ціна: 4000 грн</h4>
+      </div>
+    </div>
+    <div class="text-center mt-4">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-success btn-lg">Забронювати зараз</a>
+    </div>
+    <div class="text-center mt-4">
+      <a href="{{ url_for('index') }}" class="btn btn-secondary">Повернутися на головну</a>
+    </div>
+
+    <!-- Інтерактивна карта -->
+    <div id="map"></div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const map = L.map('map').setView([51.389, 30.099], 12); // Координати Чорнобильської зони
+
+      // Додавання тайлів з OpenStreetMap
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Додавання маркера для Чорнобильської зони
+      L.marker([51.389, 30.099])
+        .addTo(map)
+        .bindPopup("<b>Чорнобильська зона</b><br>Точка початку вашої подорожі.")
+        .openPopup();
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

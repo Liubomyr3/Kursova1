@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Особистий кабінет</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .table-container {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Навігація -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('index') }}">Головна</a>
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="navbar-brand" href="{{ url_for('my_feedbacks') }}">Мої відгуки</a></li>
+        <li class="nav-item"><a class="navbar-brand" href="{{ url_for('index') }}#contact">Залишити відгук</a></li>
+        <li class="nav-item"><a class="navbar-brand" href="{{ url_for('all_excursions') }}">Пошук екскурсій</a></li>
+      </ul>
+      <ul class="navbar-nav">
+        {% if 'user_id' in session %}
+          <li class="nav-item"><a class="navbar-brand" href="{{ url_for('dashboard') }}">{{ session['user_name'] }}</a></li>
+          <li class="nav-item"><a class="btn btn-danger text-white" href="{{ url_for('logout') }}">Вийти</a></li>
+        {% else %}
+          <li class="nav-item"><a class="navbar-brand" href="{{ url_for('login') }}">Вхід</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Основний контент -->
+  <div class="container mt-5">
+    <h1>Особистий Кабінет</h1>
+    <p>Вітаємо, {{ user.name }}!</p>
+    <p>Ваш email: {{ user.email }}</p>
+    <p>Ваш баланс: {{ user.bonus_amount }} грн</p>
+    <p>Дата реєстрації: {{ user.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+  </div>
+
+  <div class="container table-container">
+    <h2>Заброньовані екскурсії</h2>
+    <table class="table table-striped" id="bookedTrips">
+      <thead>
+        <tr>
+          <th>Зображення</th>
+          <th>Назва</th>
+          <th>Місце</th>
+          <th>Ціна</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Заповнюється через JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="container table-container">
+    <h2>Доступні екскурсії</h2>
+    <table class="table table-striped" id="availableTrips">
+      <thead>
+        <tr>
+          <th>Зображення</th>
+          <th>Назва</th>
+          <th>Місце</th>
+          <th>Ціна</th>
+          <th>Дія</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Заповнюється через JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+document.addEventListener("DOMContentLoaded", async function () {
+    const availableTripsTable = document.getElementById("availableTrips").querySelector("tbody");
+    const bookedTripsTable = document.getElementById("bookedTrips").querySelector("tbody");
+
+    try {
+        // Отримати дані з API про всі екскурсії
+        const excursionsResponse = await fetch("/api/excursions");
+        const excursions = await excursionsResponse.json();
+
+        // Отримати дані з API про заброньовані екскурсії користувачем
+        const userBookingsResponse = await fetch("/api/user/bookings");
+        const userBookings = await userBookingsResponse.json();
+
+        // Створити список заброньованих ID
+        const bookedIds = userBookings.map((booking) => booking.id);
+
+        // Заповнення таблиці доступних екскурсій
+        excursions.forEach((excursion) => {
+            if (!bookedIds.includes(excursion.id)) {
+                // Додати до таблиці доступних екскурсій
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td><img src="${excursion.image}" alt="${excursion.name}" style="width: 100px; height: auto;"></td>
+                    <td>${excursion.name}</td>
+                    <td>${excursion.location}</td>
+                    <td>${excursion.price} грн</td>
+                    <td><button class="btn btn-success" data-id="${excursion.id}">Забронювати</button></td>
+                `;
+                availableTripsTable.appendChild(row);
+
+                // Додати обробник на кнопку "Забронювати"
+                row.querySelector("button").addEventListener("click", async function () {
+                    const excursionId = this.getAttribute("data-id");
+
+                    try {
+                        const bookResponse = await fetch(`/book/${excursionId}`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        });
+
+                        if (bookResponse.ok) {
+                            alert("Екскурсію успішно заброньовано!");
+                            window.location.reload(); // Оновити сторінку після бронювання
+                        } else {
+                            const errorData = await bookResponse.json();
+                            alert(`Помилка: ${errorData.message}`);
+                        }
+                    } catch (error) {
+                        console.error("Помилка бронювання:", error);
+                        alert("Щось пішло не так. Спробуйте ще раз.");
+                    }
+                });
+            }
+        });
+
+        // Заповнити таблицю заброньованих екскурсій
+        userBookings.forEach((booking) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td><img src="${booking.image}" alt="${booking.name}" style="width: 100px; height: auto;"></td>
+                <td>${booking.name}</td>
+                <td>${booking.location}</td>
+                <td>${booking.price} грн</td>
+                <td>${booking.status}</td>
+            `;
+            bookedTripsTable.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Помилка завантаження екскурсій:", error);
+        alert("Не вдалося завантажити екскурсії. Спробуйте пізніше.");
+    }
+});
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
